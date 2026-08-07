@@ -1,0 +1,94 @@
+version: 1
+documents:
+  - id: nasa_thermal_modeling_pdf
+    content_group: nasa_thermal_modeling
+    name: NASA Thermal Modeling and Analysis (PDF)
+    source_page: https://ntrs.nasa.gov/citations/20220017174
+    source_url: https://ntrs.nasa.gov/api/citations/20220017174/downloads/20220017174.pdf
+    local_filename: nasa_thermal_modeling.pdf
+    format: pdf
+    category: technical presentation
+    description: PDF export of a NASA GSFC thermal modeling course presentation.
+    expected_features:
+      - headings
+      - text-boxes
+      - images
+      - engineering-graphics
+      - equations
+
+  - id: nasa_thermal_modeling_pptx
+    content_group: nasa_thermal_modeling
+    name: NASA Thermal Modeling and Analysis (PPTX)
+    source_page: https://ntrs.nasa.gov/citations/20220017174
+    source_url: "https://ntrs.nasa.gov/api/citations/20220017174/downloads/%28reupload%29%20HP%20Thermal%20Analysis%20Presentation.pptx"
+    local_filename: nasa_thermal_modeling.pptx
+    format: pptx
+    category: technical presentation
+    description: Original NASA GSFC presentation for comparison with its PDF export.
+    expected_features:
+      - headings
+      - text-boxes
+      - images
+      - engineering-graphics
+      - equations
+
+  - id: nist_handbook_133_appendix_a_pdf
+    content_group: nist_handbook_133_appendix_a
+    name: NIST Handbook 133 Appendix A - Tables (PDF)
+    source_page: https://www.nist.gov/pml/owm/nist-handbook-133-current-edition
+    source_url: https://www.nist.gov/document/2026-hb-133-appendix
+    local_filename: nist_handbook_133_appendix_a.pdf
+    format: pdf
+    category: complex tables
+    description: PDF edition of Appendix A from NIST Handbook 133 (2026).
+    expected_features:
+      - headings
+      - tables
+      - repeated-table-headers
+      - multi-page-tables
+
+  - id: nist_handbook_133_appendix_a_docx
+    content_group: nist_handbook_133_appendix_a
+    name: NIST Handbook 133 Appendix A - Tables (DOCX)
+    source_page: https://www.nist.gov/pml/owm/nist-handbook-133-current-edition
+    source_url: https://www.nist.gov/document/2026-hb-133-appendix-word
+    local_filename: nist_handbook_133_appendix_a.docx
+    format: docx
+    category: complex tables
+    description: Original DOCX edition for comparison with the Appendix A PDF export.
+    expected_features:
+      - headings
+      - tables
+      - repeated-table-headers
+      - multi-page-tables
+
+  - id: naca_aerodynamic_heating_scan_pdf
+    content_group: naca_aerodynamic_heating_scan
+    name: NACA Aerodynamic Heating of Aircraft Components
+    source_page: https://ntrs.nasa.gov/citations/19930089131
+    source_url: https://ntrs.nasa.gov/api/citations/19930089131/downloads/19930089131.pdf
+    local_filename: naca_aerodynamic_heating_scan.pdf
+    format: pdf
+    category: OCR / scanned PDF
+    description: Historical 1956 NACA research memorandum from the NASA NTRS legacy collection.
+    expected_features:
+      - OCR
+      - equations
+      - figures
+      - historical-typography
+      - poor-source-quality
+
+  - id: nist_smart_manufacturing_metadata_xlsx
+    content_group: nist_smart_manufacturing_metadata
+    name: NIST Smart Manufacturing Metadata
+    source_page: https://www.nist.gov/ctl/smart-connected-systems-division/networked-control-systems-group/measurement-data-files
+    source_url: https://s3.amazonaws.com/nist-ics-wireless/measurements/SmartManufacturing_MetaData.xlsx
+    local_filename: nist_smart_manufacturing_metadata.xlsx
+    format: xlsx
+    category: spreadsheet
+    description: NIST situational metadata for industrial wireless measurements.
+    expected_features:
+      - sheets
+      - tables
+      - rows-and-columns
+      - metadata
