@@ -1,4 +1,5 @@
-# Versions fixed for a reproducible first PoC run (2026-08-07).
-# Only the MarkItDown extras needed by the planned input formats are installed.
-markitdown[pdf,docx,pptx]==0.1.7
+# Versions fixed for reproducible Phase 1 and Phase 2 PoC runs (2026-08-07).
+# Only the MarkItDown extras needed by the configured input formats are installed.
+markitdown[pdf,docx,pptx,xlsx]==0.1.7
 docling==2.118.0
+PyYAML==6.0.3

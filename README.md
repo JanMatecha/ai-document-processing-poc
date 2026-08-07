@@ -1,43 +1,17 @@
 # PoC: porovnání Docling a MarkItDown
 
-První fáze lokálního PoC porovnává převod stejného technického PDF do Markdownu pomocí:
+Projekt prakticky porovnává lokální převod technických dokumentů do Markdownu pomocí [Microsoft MarkItDown](https://github.com/microsoft/markitdown) a [Docling](https://docling-project.github.io/docling/). Dokumenty se neposílají do cloudové AI ani do externí služby pro zpracování dokumentů.
 
-- [Microsoft MarkItDown](https://github.com/microsoft/markitdown),
-- [Docling](https://docling-project.github.io/docling/).
+PoC má dvě navazující fáze:
 
-Oba skripty čtou stejný soubor, zdroj nemodifikují a ukládají samostatné výstupy pro ruční porovnání. Nejsou nakonfigurovány žádné cloudové AI služby, LLM klienti ani vzdálené pluginy.
+- **Fáze 1** zachovává původní minimální test nad syntetickým `input/test.pdf`. Ověřené výsledky a ruční zhodnocení jsou v [`COMPARISON.md`](COMPARISON.md).
+- **Fáze 2** přidává reprodukovatelný benchmark veřejných reálných dokumentů ve formátech PDF, DOCX, PPTX a XLSX, včetně srovnání stejného obsahu v různých zdrojových formátech.
 
-## Struktura
-
-```text
-.
-├── README.md
-├── requirements.txt
-├── input/
-│   └── test.pdf
-├── output/
-│   ├── docling/
-│   │   └── test.md
-│   └── markitdown/
-│       └── test.md
-├── scripts/
-│   └── generate_test_pdf.py
-└── src/
-    ├── docling_test.py
-    └── markitdown_test.py
-```
-
-`input/test.pdf` je dvoustránkový technický testovací dokument s nadpisy, běžným textem, metadaty, seznamy, rovnicemi zapsanými jako text, blokovým schématem a dvěma tabulkami. Volitelný generátor je uložen v `scripts/generate_test_pdf.py`; pro běžné spuštění PoC není potřeba.
-
-## Požadavky
+## Požadavky a instalace
 
 - 64bit Python 3.10 nebo novější,
-- internet pro první instalaci balíčků,
-- dostatek volného místa pro závislosti Doclingu a jeho lokální modely.
-
-Verze knihoven jsou v `requirements.txt` zafixované, aby byly výsledky první fáze reprodukovatelné.
-
-## Instalace do `venv`
+- internet pro instalaci balíčků a jednorázové stažení veřejného datasetu,
+- dostatek místa pro závislosti Doclingu a jeho lokální modely.
 
 PowerShell ve Windows:
 
@@ -46,6 +20,14 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
+```
+
+Pokud firemní Execution Policy blokuje `Activate.ps1`, není nutné ji měnit. Použijte interpreter virtuálního prostředí přímo:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe src\markitdown_test.py input\test.pdf
+.\.venv\Scripts\python.exe src\docling_test.py input\test.pdf
 ```
 
 Linux nebo macOS:
@@ -57,72 +39,128 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-## Spuštění
+Verze balíčků jsou zafixované v `requirements.txt`. MarkItDown je instalován s extras pro PDF, DOCX, PPTX a XLSX.
 
-Z kořene repozitáře spusťte:
+## Podporované vstupy
+
+| Formát | MarkItDown | Docling | Testovací účel |
+| --- | --- | --- | --- |
+| PDF | ano | ano | běžný text, layout, tabulky, sken/OCR |
+| DOCX | ano | ano | původní struktura dokumentu a tabulky |
+| PPTX | ano | ano | snímky, textová pole a technická grafika |
+| XLSX | ano | ano | listy, řádky, sloupce a metadata |
+
+Benchmark případný nepodporovaný formát nebo chybu jednoho konvertoru zaznamená do výsledků a pokračuje dalšími kombinacemi.
+
+## Fáze 1: syntetický PDF test
+
+Z kořene repozitáře zůstávají funkční původní příkazy:
 
 ```powershell
 python src/markitdown_test.py input/test.pdf
 python src/docling_test.py input/test.pdf
 ```
 
-Vzniknou soubory:
+Vytvoří nebo aktualizují pouze:
 
 ```text
 output/markitdown/test.md
 output/docling/test.md
 ```
 
-Každý skript vypíše verzi nástroje, absolutní vstupní a výstupní cestu, velikost vstupu, počet znaků výsledku a dobu samotného převodu. Měření Doclingu zahrnuje inicializaci jeho PDF pipeline; první běh může navíc zahrnovat stažení modelů.
+`input/test.pdf` je dvoustránkový technický test s nadpisy, seznamy, tabulkami, rovnicemi zapsanými jako text a blokovým schématem. Volitelný generátor zdroje je v `scripts/generate_test_pdf.py`.
 
-Název výstupního souboru se odvozuje od názvu vstupu. Výstupní adresář se vždy určuje relativně ke kořeni projektu, takže skript lze spustit i z jiného pracovního adresáře.
+## Fáze 2: veřejný dataset
+
+Dataset je deklarovaný v [`test_documents.yaml`](test_documents.yaml). Obsahuje:
+
+| Obsah | Formáty | Kategorie | Oficiální zdroj |
+| --- | --- | --- | --- |
+| NASA Thermal Modeling and Analysis | PDF, PPTX | technická prezentace | [NASA NTRS](https://ntrs.nasa.gov/citations/20220017174) |
+| NIST Handbook 133, Appendix A | PDF, DOCX | komplexní tabulky | [NIST](https://www.nist.gov/pml/owm/nist-handbook-133-current-edition) |
+| NACA Aerodynamic Heating of Aircraft Components | PDF | historický sken/OCR | [NASA NTRS](https://ntrs.nasa.gov/citations/19930089131) |
+| NIST Smart Manufacturing Metadata | XLSX | tabulková data | [NIST](https://www.nist.gov/ctl/smart-connected-systems-division/networked-control-systems-group/measurement-data-files) |
+
+Každá položka definuje stabilní ID, URL, místní název, formát, kategorii, popis a očekávané vlastnosti. Pole `content_group` spojuje PDF/DOCX nebo PDF/PPTX varianty stejného obsahu pro cross-format report.
+
+### Stažení vstupů
+
+Stáhněte všechny chybějící veřejné dokumenty:
+
+```powershell
+python scripts/download_test_documents.py
+```
+
+Existující soubory skript standardně přeskočí. Opětovné stažení nebo výběr jednoho dokumentu:
+
+```powershell
+python scripts/download_test_documents.py --force
+python scripts/download_test_documents.py --document nist_smart_manufacturing_metadata_xlsx
+```
+
+Dokumenty se ukládají do `input/public/`, jsou ignorované Gitem a skript nikdy nic neuploaduje. Před přesunem do cíle ověří neprázdný obsah a základní podpis PDF nebo Office ZIP kontejneru. Chyby vypíše v souhrnu a vrátí nenulový návratový kód.
+
+### Spuštění benchmarku
+
+Kompletní benchmark nad všemi lokálně dostupnými položkami:
+
+```powershell
+python scripts/run_benchmark.py
+```
+
+Užitečné dílčí varianty:
+
+```powershell
+python scripts/run_benchmark.py --document nist_smart_manufacturing_metadata_xlsx
+python scripts/run_benchmark.py --tool markitdown
+python scripts/run_benchmark.py --tool docling --repeat 3
+python scripts/run_benchmark.py --document nasa_thermal_modeling_pdf --document nasa_thermal_modeling_pptx
+```
+
+`--document` a `--tool` lze opakovat. Dílčí běh nahrazuje pouze záznamy vybraných dvojic dokument–konvertor; nesouvisející výstupy a dřívější výsledky ponechá zachované.
+
+## Výstupy
+
+```text
+input/
+├── test.pdf
+└── public/                         # stažené, Git je ignoruje
+output/
+├── markitdown/test.md              # Fáze 1
+├── docling/test.md                 # Fáze 1
+└── public/
+    └── <document-id>/
+        ├── markitdown.md
+        └── docling.md
+results/
+├── benchmark.json                  # strojově čitelná metadata
+└── BENCHMARK.md                    # přehled a cross-format tabulky
+```
+
+Každý záznam obsahuje dokument, formát, nástroj a jeho verzi, opakování, dobu konverze, velikost vstupu, délku Markdownu, základní počty nadpisů, tabulek a značek obrázků, stav a případnou chybu.
+
+Tyto indikátory **neurčují sémantického vítěze**. Kvalitu je potřeba ručně posoudit proti zdroji, zejména pořadí textu, vazby buněk tabulek, rovnice, popisky obrázků, rozložení snímků a kvalitu OCR. Pro cross-format případy porovnejte také, zda původní DOCX/PPTX zachovává strukturu lépe než PDF export.
 
 ## Lokální a offline provoz
 
-MarkItDown používá pouze `convert_local()` a má vypnuté pluginy. Skript nepředává LLM klienta ani endpoint pro Azure Document Intelligence nebo Azure Content Understanding.
+MarkItDown používá `convert_local()` s vypnutými pluginy. Není mu předán LLM klient ani cloudový endpoint.
 
-Docling má explicitně nastaveno `enable_remote_services=False` a `allow_external_plugins=False`. Vstupní dokument proto není posílán do vzdálené služby. PDF pipeline ale potřebuje lokální modelové artefakty. Při prvním použití je může stáhnout z Hugging Face; stahují se pouze modely, nikoli vstupní dokument.
+Docling má pro PDF explicitně `enable_remote_services=False` a `allow_external_plugins=False`; Office formáty používají lokální backendy. Vstupní dokument tedy žádný z projektových skriptů neposílá ke vzdálenému zpracování.
 
-Skript také nastavuje `DOCLING_INFERENCE_COMPILE_TORCH_MODELS=false` pouze pro svůj proces. Docling tak na běžné instalaci Windows používá eager inference a nevyžaduje samostatně instalovaný kompilátor Microsoft Visual C++ (`cl.exe`). Toto nastavení nemění extrahovaný dokument, pouze vypíná volitelnou kompilaci modelu pro výkon.
-
-Pro následný offline běh lze modely předem stáhnout v připojeném prostředí:
+PDF pipeline Doclingu potřebuje modelové artefakty a při prvním použití je může stáhnout. Stahují se modely, nikoli vstupní dokument. Pro následný offline běh je lze předem připravit:
 
 ```powershell
 docling-tools models download
 ```
 
-Výchozí cache Doclingu je potom použitelná bez sítě. Pro zcela oddělené prostředí lze cestu k předem přeneseným modelům nastavit proměnnou `DOCLING_ARTIFACTS_PATH`.
+Na Windows projekt pro svůj proces nastavuje `DOCLING_INFERENCE_COMPILE_TORCH_MODELS=false`, takže není nutný volitelný lokální C++ kompilátor pro `torch.compile`.
 
-## Ruční porovnání
+Historický naskenovaný PDF je záměrně náročný případ. Docling používá svou lokální OCR pipeline; MarkItDown v tomto PoC nemá aktivovaný cloudový OCR ani LLM/plugin rozšíření, proto může ze skenu získat málo nebo žádný text.
 
-Po každém převodu otevřete oba Markdown soubory vedle zdrojového PDF a doplňte hodnocení. Rychlost je vhodné měřit nejméně dvakrát: studený běh Doclingu zahrnuje inicializaci a případné stažení modelů, zatímco teplý běh lépe reprezentuje opakované lokální zpracování.
+## Bezpečné chování
 
-Výsledky ověřeného prvního běhu jsou zaznamenané v [`COMPARISON.md`](COMPARISON.md). Následující tabulka může sloužit jako čistá šablona pro další dokumenty.
-
-| Kritérium | MarkItDown | Docling |
-| --- | --- | --- |
-| Jednoduchost instalace |  |  |
-| Jednoduchost API |  |  |
-| Rychlost zpracování |  |  |
-| Kvalita běžného textu |  |  |
-| Zachování nadpisů |  |  |
-| Tabulky |  |  |
-| Obrázky / schémata |  |  |
-| Rovnice |  |  |
-| Pořadí textu |  |  |
-| Kvalita Markdownu |  |  |
-| Velikost / složitost závislostí |  |  |
-| Možnost offline provozu |  |  |
-
-Při hodnocení tabulek zkontrolujte zejména zachování šesti sloupců v tabulce měření a vazbu hodnot na testovací body `TP-01` až `TP-05`. U pořadí textu ověřte, že sekce 4 až 7 a poslední kontrolní odstavec zůstaly ve správném sledu.
-
-## Bezpečné chování skriptů
-
-- vstup musí existovat a být běžným souborem,
-- vstup je pouze čten a nikdy se nepřepisuje,
-- výsledek se nejprve zapisuje do dočasného souboru a až po úspěchu atomicky nahradí cílový Markdown,
-- chyba převodu vrátí nenulový návratový kód a existující výstup ponechá beze změny.
-
-## Další fáze
-
-Aktuální skripty záměrně zpracovávají právě jeden dokument. Struktura projektu umožňuje později doplnit dávkové zpracování, opakované benchmarky, JSON export Doclingu, práci s obrázky, lokální LLM přes Ollamu, MCP a RAG nad technickou dokumentací.
+- zdrojové dokumenty se pouze čtou a nikdy nemodifikují,
+- Markdown se zapisuje přes dočasný soubor a cílový soubor se nahradí až po úspěšné konverzi,
+- výstupy jsou oddělené podle dokumentu a nástroje,
+- chybějící vstup nebo selhání převodu se zaznamená bez ukončení celého benchmarku,
+- projekt nekonfiguruje LLM, cloudové OCR, embeddingy, vektorovou databázi ani vzdálenou document-processing službu.
