@@ -1,0 +1,4 @@
+# Versions fixed for a reproducible first PoC run (2026-08-07).
+# Only the MarkItDown extras needed by the planned input formats are installed.
+markitdown[pdf,docx,pptx]==0.1.7
+docling==2.118.0
